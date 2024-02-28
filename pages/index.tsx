@@ -1,4 +1,6 @@
 import styles from './home.module.css';
+// @ts-ignore
+import { footer } from './home.module.css';
 
 export default function Home() {
   return (
@@ -28,7 +30,7 @@ export default function Home() {
           </p>
         </main>
       </div>
-      <footer className={styles.footer}>
+      <footer className={footer}>
         <p className={styles.footerText}>© 2022 Your Company</p>
       </footer>
     </div>
