@@ -1,44 +1,64 @@
-This is a [Next.js](https://nextjs.org/) template to use when reporting a [bug in the Next.js repository](https://github.com/vercel/next.js/issues).
+This uses the [Next.js](https://nextjs.org/) template to reporting a [bug in the Next.js repository](https://github.com/vercel/next.js/issues).
 
-## Getting Started
-
-These are the steps you should follow when creating a bug report:
-
-- Bug reports must be verified against the `next@canary` release. The canary version of Next.js ships daily and includes all features and fixes that have not been released to the stable version yet. Think of canary as a public beta. Some issues may already be fixed in the canary version, so please verify that your issue reproduces before opening a new issue. Issues not verified against `next@canary` will be closed after 30 days.
-- Make sure your issue is not a duplicate. Use the [GitHub issue search](https://github.com/vercel/next.js/issues) to see if there is already an open issue that matches yours. If that is the case, upvoting the other issue's first comment is desirable as we often prioritize issues based on the number of votes they receive. Note: Adding a "+1" or "same issue" comment without adding more context about the issue should be avoided. If you only find closed related issues, you can link to them using the issue number and `#`, eg.: `I found this related issue: #3000`.
-- If you think the issue is not in Next.js, the best place to ask for help is our [Discord community](https://nextjs.org/discord) or [GitHub discussions](https://github.com/vercel/next.js/discussions). Our community is welcoming and can often answer a project-related question faster than the Next.js core team.
-- Make the reproduction as minimal as possible. Try to exclude any code that does not help reproducing the issue. E.g. if you experience problems with Routing, including ESLint configurations or API routes aren't necessary. The less lines of code is to read through, the easier it is for the Next.js team to investigate. It may also help catching bugs in your codebase before publishing an issue.
-
-## How to use this template
-
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init), [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/), or [pnpm](https://pnpm.io) to bootstrap the example:
+## Reproduction Steps
 
 ```bash
-npx create-next-app --example reproduction-template-pages reproduction-app
+npm i 
+npm run build
 ```
+
+```
+Route (pages)                             Size     First Load JS
+┌ ○ /                                     780 B          78.9 kB
+├   └ css/6ab5fea530a348de.css            367 B
+└ ○ /404                                  182 B          78.3 kB
++ First Load JS shared by all             78.1 kB
+  ├ chunks/framework-2c16ac744b6cdea6.js  45.2 kB
+  ├ chunks/main-d7239acbfe0deb02.js       31.9 kB
+  └ other shared chunks (total)           945 B
+
+○  (Static)  prerendered as static content
+```
+
+## Patch
 
 ```bash
-yarn create next-app --example reproduction-template-pages reproduction-app
+rm -rf .next
+npm run patch
+npm run build
 ```
 
-```bash
-pnpm create next-app --example reproduction-template-pages reproduction-app
 ```
 
-## Learn More
+Route (pages)                             Size     First Load JS
+┌ ○ /                                     682 B          78.7 kB
+├   └ css/6ab5fea530a348de.css            367 B
+└ ○ /404                                  182 B          78.2 kB
++ First Load JS shared by all             78 kB
+  ├ chunks/framework-2c16ac744b6cdea6.js  45.2 kB
+  ├ chunks/main-d7239acbfe0deb02.js       31.9 kB
+  └ other shared chunks (total)           907 B
 
-To learn more about Next.js, take a look at the following resources:
+○  (Static)  prerendered as static content
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [How to Contribute to Open Source (Next.js)](https://www.youtube.com/watch?v=cuoNzXFLitc) - a video tutorial by Lee Robinson
-- [Triaging in the Next.js repository](https://github.com/vercel/next.js/blob/canary/contributing.md#triaging) - how we work on issues
-- [CodeSandbox](https://codesandbox.io/s/github/vercel/next.js/tree/canary/examples/reproduction-template-pages) - Edit this repository on CodeSandbox
+As you can see, the size of the first load JS is reduced by ~100 bytes.
+For a larger project, this would be more significant.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## Patch:
 
-## Deployment
-
-If your reproduction needs to be deployed, the easiest way is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+```diff
+diff --git a/node_modules/next/dist/build/webpack/config/blocks/css/loaders/client.js b/node_modules/next/dist/build/webpack/config/blocks/css/loaders/client.js
+index e482b46..1b35d91 100644
+--- a/node_modules/next/dist/build/webpack/config/blocks/css/loaders/client.js
++++ b/node_modules/next/dist/build/webpack/config/blocks/css/loaders/client.js
+@@ -39,7 +39,7 @@ function getClientStyleLoader({ hasAppDir, isAppDir, isDevelopment, assetPrefix
+         loader: MiniCssExtractPlugin.loader,
+         options: {
+             publicPath: `${assetPrefix}/_next/`,
+-            esModule: false
++            esModule: true
+         }
+     };
+ }
+ ```
